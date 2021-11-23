@@ -1,11 +1,29 @@
 <?php
+/**
+ *               МОСТ
+ * ---------------------------------
+ * Структурный шаблон проектирования
+ *
+ * Используется для разделения бизнес-логики/большого класса на независимые - абстракцию и реализацию.
+ * Абстракция будет принимать объект реализации и в дальнейшем делегировать ему некоторую логику.
+ * И абстракции и реализации должны следовать своим интерфейсам, чтобы исключить ошибки.
+ *
+ */
 
-interface DataInterface
+// ==================================================================
+// Структура
+// ==================================================================
+
+// ==================================================================
+// ======= Различные классы преобразователей данных (Реализации/имплементации)
+// ==================================================================
+
+interface DataPreparerInterface
 {
     public function prepareData(array $data);
 }
 
-abstract class Data implements DataInterface
+abstract class DataPreparer implements DataPreparerInterface
 {
     protected $data = null;
 
@@ -17,7 +35,7 @@ abstract class Data implements DataInterface
     abstract function prepareData(array $data);
 }
 
-class ExcelData extends Data
+class PreparerExcelData extends DataPreparer
 {
     public function prepareData(array $data)
     {
@@ -32,7 +50,7 @@ class ExcelData extends Data
 }
 
 
-class JSONData extends Data
+class PreparerJSONData extends DataPreparer
 {
     public function prepareData(array $data)
     {
@@ -40,11 +58,20 @@ class JSONData extends Data
     }
 }
 
-class ProvideData
+// ==================================================================
+// ======= Различные классы поставщика данных (Абстракции)
+// ==================================================================
+
+interface ProviderInterface
+{
+    public function send();
+}
+
+abstract class Provider implements ProviderInterface
 {
     protected $data;
 
-    public function __construct(DataInterface $data)
+    public function __construct(DataPreparerInterface $data)
     {
         $this->data = $data;
     }
@@ -54,22 +81,29 @@ class ProvideData
         $this->data->prepareData($data);
     }
 
-    public function sendEmail()
+    abstract public function send();
+}
+
+class SendEmail extends Provider
+{
+    public function send()
     {
         echo "Sending email with : {$this->data->getData()}";
         echo '<hr/>';
     }
+}
 
-
-    public function sendMessage()
+class SendMessage extends Provider
+{
+    public function send()
     {
         echo "Sending MESSAGE with : {$this->data->getData()}";
         echo '<hr/>';
     }
 }
 
-$obj_1 = new ExcelData();
-$obj_2 = new JSONData();
+$obj_1 = new PreparerExcelData();
+$obj_2 = new PreparerJSONData();
 
 $data = [
     'a' => 234,
@@ -77,14 +111,11 @@ $data = [
     'c' => '+----_=+++-__+=='
 ];
 
-$provider = new ProvideData($obj_1);
-$provider_2 = new ProvideData($obj_2);
+$provider = new SendEmail($obj_1);
+$provider_2 = new SendMessage($obj_2);
 
 $provider->prepare($data);
 $provider_2->prepare($data);
 
-$provider->sendEmail();
-$provider_2->sendEmail();
-
-$provider->sendMessage();
-$provider_2->sendMessage();
+$provider->send();
+$provider_2->send();
