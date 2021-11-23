@@ -1,4 +1,15 @@
 <?php
+/**
+ * Структурный шаблон проектирования
+ *
+ * Используется для приведения объектов разных классов к одному интерфейсу.
+ * Для этого создаются классы адаптеры с унифицированным интерфейсом, но содержат внутри разные объекты для адаптирования.
+ * Внутри методов объектов-адаптеров используются методы адаптируемых объектов.
+ */
+
+// ==================================================================
+// Структура
+// ==================================================================
 class Programmer
 {
     public $a = 0;
@@ -33,13 +44,13 @@ class Guy
     }
 }
 
-interface StandartInterface
+interface AdapterInterface
 {
     public function setNumbers($a, $b);
     public function getSum();
 }
 
-class ProgrammerAdapter implements StandartInterface
+class ProgrammerAdapter implements AdapterInterface
 {
     public $human;
     public function __construct()
@@ -57,7 +68,7 @@ class ProgrammerAdapter implements StandartInterface
 }
 
 
-class GuyAdapter implements StandartInterface
+class GuyAdapter implements AdapterInterface
 {
     public $human;
     public function __construct()
@@ -74,17 +85,18 @@ class GuyAdapter implements StandartInterface
     }
 }
 
+// ==================================================================
+// Тестовая часть
+// ==================================================================
+
 class Journalist
 {
-    public function askHumanAboutSum($a, $b, StandartInterface $human)
+    public function askHumanAboutSum($a, $b, AdapterInterface $human)
     {
         $human->setNumbers($a,$b);
         $class = get_class($human->human);
         $answer = $human->getSum();
-
-        echo "{$class} answer {$a} + {$b} is : {$answer}";
-
-        echo '<hr/>';
+        echo "{$class} answer {$a} + {$b} is : {$answer} <hr/>";
     }
 }
 
