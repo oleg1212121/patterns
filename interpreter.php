@@ -1,9 +1,33 @@
 <?php
+/**
+ *           ИНТЕРПРЕТАТОР
+ * ---------------------------------
+ * Поведенческий шаблон проектирования
+ *
+ * Применяется для решения типичной, но часто изменяющейся задачи (например Парсинг).
+ * Обычно содержит два вида классов - "НетерминальноеВыражение" и "ТерминальноеВыражение" (Рекурсивное).
+ * Нетерминальное выражение должно вернуть конечное значение.
+ * Терминальное выражение должно быть разобрано рекурсивно на терминальное и нетерминальное.
+ * В итоге получится конечное значение всей задачи.
+ *
+ * Главный недостаток - высокая сложность реализации при большом количестве правил интерпретации.
+ * Так же большая вероятность медленной работы интерпретатора.
+ *
+ * Примеры - язык SQL, математические выражения в строке и т.п.
+ */
+
+// ==================================================================
+// Структура
+// ==================================================================
 
 abstract class AbstractExpression
 {
     abstract public function interprete();
 }
+
+// ==================================================================
+// ======= Классы возвращающие конечное значение (нетерминальные)
+// ==================================================================
 
 class Number extends AbstractExpression
 {
@@ -84,6 +108,9 @@ class Divide extends AbstractExpression
     }
 }
 
+// ==================================================================
+// ======= Классы терминальных выражений (с рекурсией)
+// ==================================================================
 
 class BracketsExpression extends AbstractExpression
 {
@@ -97,7 +124,6 @@ class BracketsExpression extends AbstractExpression
     public function interprete()
     {
         preg_match("/\([0-9\-\+\/\*]{0,}\)/", $this->string, $matches);
-
         if(count($matches) == 0){
             return $this->string;
         } else {
@@ -122,7 +148,6 @@ class DivideExpression extends AbstractExpression
     {
         echo $this->string.'<hr/>';
         preg_match("/[^\-\+\*\/]+\/[^\-\+\*\/]+/", $this->string, $matches);
-
         if(count($matches) == 0){
             return $this->string;
         } else {
@@ -130,7 +155,6 @@ class DivideExpression extends AbstractExpression
             $indoor = (new Divide(...$parts))->interprete();
             $this->string = str_replace( $matches[0], $indoor, $this->string);
             $new = (new DivideExpression($this->string))->interprete();
-
             return $new;
         }
     }
@@ -149,7 +173,6 @@ class MultiplyExpression extends AbstractExpression
     {
         echo $this->string.'<hr/>';
         preg_match("/[^\-\+\*\/]+\*[^\-\+\*\/]+/", $this->string, $matches);
-
         if(count($matches) == 0){
             return $this->string;
         } else {
@@ -157,7 +180,6 @@ class MultiplyExpression extends AbstractExpression
             $indoor = (new Multiply(...$parts))->interprete();
             $this->string = str_replace( $matches[0], $indoor, $this->string);
             $new = (new MultiplyExpression($this->string))->interprete();
-
             return $new;
         }
     }
@@ -178,7 +200,6 @@ class SimpleExpression extends AbstractExpression
         echo $this->string.'<hr/>';
         $withoutDivideExpression = (new DivideExpression($this->string))->interprete();
         $this->string = (new MultiplyExpression($withoutDivideExpression))->interprete();
-
         $res = 0;
         $cur = '';
         $str = str_split($this->string);
@@ -197,6 +218,10 @@ class SimpleExpression extends AbstractExpression
     }
 }
 
+// ==================================================================
+// Тесты
+// ==================================================================
+
 class Parser extends AbstractExpression
 {
     protected $string;
@@ -214,8 +239,6 @@ class Parser extends AbstractExpression
         return $simpleExpression;
     }
 }
-//1 + 2 + 33 - 88 - (11 - (2) - (1))=== -60
 $str = "1+440/220+33-44*2-(-10+20-2+2+7/7-(33-33+2)-(33-44+12))";
 $parser = new Parser($str);
-
 echo $parser->interprete();
