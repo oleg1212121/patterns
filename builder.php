@@ -1,228 +1,180 @@
 <?php
+/**
+ *           СТРОИТЕЛЬ
+ * ---------------------------------
+ * Порождающий шаблон проектирования
+ *
+ * Используется как интерфейс для пошагового заполнения/изменения объекта-продукта.
+ *
+ * Директор - принимает объект строителя. Методы директора содержат заранее определенный набор вызовов методов строителя.
+ * Таким образом директор может создавать продукты с различным набором частей.
+ *
+ */
 
-class Field
+// ==================================================================
+// Структура
+// ==================================================================
+
+// ==================================================================
+// ======= Классы частей из которых собирается продукт
+// ==================================================================
+
+abstract class ProductPart
 {
-    protected $field = '';
+    public $name;
 
-    public function __construct($field = null)
+    public function getInfo()
     {
-        if ($field)
-            $this->field = $field;
-    }
-
-    public function get()
-    {
-        return $this->field;
+        return $this->name;
     }
 }
 
-class Color extends Field
+class USB_C extends ProductPart
 {
-    protected $field = 'white';
+    public $name = 'USB_C';
 }
 
-class Material extends Field
+class USB_A extends ProductPart
 {
-    protected $field = 'silk';
+    public $name = 'USB_A';
 }
 
-abstract class Thing
+class USB_B extends ProductPart
 {
-    protected $color;
-    protected $material;
-
-    public function __construct(Color $color, Material $material)
-    {
-        $this->color = $color->get();
-        $this->material = $material->get();
-
-    }
-
-    public function getFields()
-    {
-        return "Color is {$this->color}, and material is {$this->material}";
-    }
-
-    public function getColor()
-    {
-        return $this->color;
-    }
-
-    public function getMaterial()
-    {
-        return $this->material;
-    }
-    abstract function getDescription();
+    public $name = 'USB_B';
 }
 
-class Hat extends Thing
+class HDMI extends ProductPart
 {
+    public $name = 'HDMI';
+}
+
+class DVI extends ProductPart
+{
+    public $name = 'DVI';
+}
+
+// ==================================================================
+// ======= Класс продукта который будет собираться строителем
+// ==================================================================
+
+class Product
+{
+    public $parts = [];
+
     public function getDescription()
     {
-        $fields = static::getFields();
-        return "</br>Hat fields is:</br>{$fields}";
-    }
-}
-
-class Jacket extends Thing
-{
-    public function getDescription()
-    {
-        $fields = static::getFields();
-        return "</br>Jacket fields is:</br>{$fields}";
-    }
-}
-
-class Boots extends Thing
-{
-    public function getDescription()
-    {
-        $fields = static::getFields();
-        return "</br>Boots fields is:</br>{$fields}";
-    }
-}
-
-class Human
-{
-    protected $hat;
-    protected $jacket;
-    protected $boots;
-
-    public function setGoods(Hat $hat = null, Jacket $jacket = null, Boots $boots = null)
-    {
-        $this->setHat($hat);
-        $this->setJacket($jacket);
-        $this->setBoots($boots);
-    }
-
-    public function setHat(Hat $hat)
-    {
-        $this->hat = $hat;
-    }
-
-    public function setJacket(Jacket $jacket)
-    {
-        $this->jacket = $jacket;
-    }
-    public function setBoots(Boots $boots)
-    {
-        $this->boots = $boots;
-    }
-
-    public function getHat()
-    {
-        return $this->hat;
-    }
-
-    public function getJacket()
-    {
-        return $this->jacket;
-    }
-
-    public function getBoots()
-    {
-        return $this->boots;
-    }
-
-    public function getGoods()
-    {
-        $fields = [
-            $this->hat,
-            $this->jacket,
-            $this->boots,
-        ];
-        foreach ($fields as $item) {
-            if($item) echo $item->getDescription();
+        foreach ($this->parts as $part) {
+            echo $part->getinfo() . '<hr/>';
         }
     }
 }
 
-abstract class HumanBuilder
+// ==================================================================
+// ======= Строитель
+// ==================================================================
+
+interface BuilderInterface
 {
-    protected $human;
-
-    public function createHuman()
-    {
-        $this->human = new Human();
-    }
-    public function getHuman()
-    {
-        return $this->human;
-    }
-
-    abstract function buildHat();
-    abstract function buildJacket();
-    abstract function buildBoots();
-
+    public function installUSB_A();
+    public function installUSB_B();
+    public function installUSB_C();
+    public function installHDMI();
+    public function installDVI();
+    public function getProduct();
 }
 
-class YellowLeatherHumanBuilder extends HumanBuilder
+class NotebookPortsAdapterBuilder implements BuilderInterface
 {
-    public function buildHat()
+    protected $product;
+    
+    public function __construct()
     {
-        $this->human->setHat(new Hat(new Color('yellow'), new Material('leather')));
+        $this->resetProduct();
     }
 
-    public function buildJacket()
+    protected function resetProduct()
     {
-        $this->human->setJacket(new Jacket(new Color('yellow'), new Material('leather')));
+        $this->product = new Product();
     }
 
-    public function buildBoots()
+    public function installUSB_A()
     {
-        $this->human->setBoots(new Boots(new Color('yellow'), new Material('leather')));
+        array_push($this->product->parts, new USB_A());
+    }
+
+    public function installUSB_B()
+    {
+        array_push($this->product->parts, new USB_B());
+    }
+
+    public function installUSB_C()
+    {
+        array_push($this->product->parts, new USB_C());
+    }
+
+    public function installHDMI()
+    {
+        array_push($this->product->parts, new HDMI());
+    }
+
+    public function installDVI()
+    {
+        array_push($this->product->parts, new DVI());
+    }
+
+    public function getProduct()
+    {
+        $this->product->getDescription();
+        $this->resetProduct();
     }
 }
 
+// ==================================================================
+// ======= Директор
+// ==================================================================
 
-class GreenCotonHumanBuilder extends HumanBuilder
-{
-    public function buildHat()
-    {
-        $this->human->setHat(new Hat(new Color('green'), new Material('coton')));
-    }
-
-    public function buildJacket()
-    {
-        $this->human->setJacket(new Jacket(new Color('green'), new Material('coton')));
-    }
-
-    public function buildBoots()
-    {
-        $this->human->setBoots(new Boots(new Color('green'), new Material('coton')));
-    }
-}
-
-class Director
+class NotebookPortsAdapterDirector
 {
     protected $builder;
 
-    public function setBuilder(HumanBuilder $builder)
+    public function __construct(BuilderInterface $builder)
     {
         $this->builder = $builder;
     }
-    public function getHuman()
+
+    public function createFullPackageAdapter()
     {
-        if($this->builder){
-            $this->builder->createHuman();
-            $this->builder->buildHat();
-            $this->builder->buildJacket();
-            $this->builder->buildBoots();
-            return $this->builder->getHuman();
-        } else {
-            return null;
-        }
+        $this->builder->installUSB_A();
+        $this->builder->installUSB_B();
+        $this->builder->installUSB_C();
+        $this->builder->installHDMI();
+        $this->builder->installDVI();
+        $this->builder->getProduct();
+    }
+
+    public function createMinimalAdapter()
+    {
+        $this->builder->installUSB_A();
+        $this->builder->installHDMI();
+        $this->builder->getProduct();
+    }
+
+    public function createDefaultAdapter()
+    {
+        $this->builder->installUSB_C();
+        $this->builder->installHDMI();
+        $this->builder->installDVI();
+        $this->builder->getProduct();
     }
 }
 
-$director = new Director();
-$builder_1 = new YellowLeatherHumanBuilder();
-$builder_2 = new GreenCotonHumanBuilder();
+// ==================================================================
+// Тесты
+// ==================================================================
 
-$director->setBuilder($builder_1);
-$human = $director->getHuman();
-$human->getGoods();
-echo '<hr/>';
-$director->setBuilder($builder_2);
-$human = $director->getHuman();
-$human->getGoods();
+$builder = new NotebookPortsAdapterBuilder();
+$director = new NotebookPortsAdapterDirector($builder);
+$director->createFullPackageAdapter();
+echo "=================================<hr/>";
+$director->createDefaultAdapter();
