@@ -132,9 +132,10 @@ class Calculator
 // ==================================================================
 
 $calculator = new Calculator();
+// выполнение команд
 $calculator->execute(new AddCommand(5));
-$calculator->execute(new AddCommand(10));
-$calculator->execute(new AddCommand(15));
-echo '<hr/>';
-$calculator->redo(10);
-$calculator->undo(20);
+$calculator->execute(new MultiplyCommand(10));
+$calculator->execute(new DivideCommand(3));
+// повторение и откат команд
+$calculator->redo(3);
+$calculator->undo(6);
