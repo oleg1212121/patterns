@@ -1,4 +1,22 @@
 <?php
+/**
+ *            ПРОТОТИП
+ * ---------------------------------
+ * Порождающий шаблон проектирования
+ *
+ * Позволяет копировать объекты не вдаваясь в подробности реализации.
+ * Для реализации используется метод clone.
+ * Для реализации с сложными объектами нужно использовать более сложную реализацию с описанием клонирования всех частей.
+ *
+ */
+
+// ==================================================================
+// Структура
+// ==================================================================
+
+// ==================================================================
+// ======= Вспомогательные классы для составного объекта
+// ==================================================================
 
 class Field
 {
@@ -26,6 +44,10 @@ class Material extends Field
     protected $field = 'silk';
 }
 
+// ==================================================================
+// ======= Классы которые будут клонироваться
+// ==================================================================
+
 abstract class Thing
 {
     protected $color;
@@ -33,25 +55,32 @@ abstract class Thing
 
     public function __construct(Color $color, Material $material)
     {
-        $this->color = $color->get();
-        $this->material = $material->get();
-
+        $this->color = $color;
+        $this->material = $material;
     }
 
     public function getFields()
     {
-        return "Color is {$this->color}, and material is {$this->material}";
+        return "Color is {$this->color->get()}, and material is {$this->material->get()}";
     }
 
-    public function getColor()
+    public function setColor(Color $color)
     {
-        return $this->color;
+        $this->color = $color;
     }
 
-    public function getMaterial()
+    public function setMaterial(Material $material)
     {
-        return $this->material;
+        $this->material = $material;
     }
+
+    // реализация клонирования вложенных объектов
+    public function __clone()
+    {
+        $this->color = clone $this->color;
+        $this->material = clone $this->material;
+    }
+
     abstract function getDescription();
 }
 
@@ -73,27 +102,19 @@ class Jacket extends Thing
     }
 }
 
-class Boots extends Thing
-{
-    public function getDescription()
-    {
-        $fields = static::getFields();
-        return "</br>Boots fields is:</br>{$fields}";
-    }
-}
+// ==================================================================
+// ======= Класс производитель прототипов
+// ==================================================================
 
-
-abstract class Market
+class Market
 {
     protected $hat;
     protected $jacket;
-    protected $boots;
 
-    public function __construct(Hat $hat , Jacket $jacket , Boots $boots )
+    public function __construct(Hat $hat , Jacket $jacket)
     {
         $this->hat = $hat;
         $this->jacket = $jacket;
-        $this->boots = $boots;
     }
 
     public function getHat()
@@ -105,48 +126,22 @@ abstract class Market
     {
         return clone $this->jacket;
     }
-
-    public function getBoots()
-    {
-        return clone $this->boots;
-    }
 }
 
-class GreenMarket extends Market
-{
-
-}
-
-class RedMarket extends Market
-{
-
-}
+// ==================================================================
+// Тесты
+// ==================================================================
 
 $materials = [null, 'linen', 'coton', 'leather'];
-
-$greenMarket = new GreenMarket(
+$market = new Market(
     new Hat(new Color('green'), new Material($materials[array_rand($materials)])),
-    new Jacket(new Color('green'), new Material($materials[array_rand($materials)])),
-    new Boots(new Color('green'), new Material($materials[array_rand($materials)]))
+    new Jacket(new Color('green'), new Material($materials[array_rand($materials)]))
 );
-
-
-$redMarket = new RedMarket(
-    new Hat(new Color('red'), new Material($materials[array_rand($materials)])),
-    new Jacket(new Color('red'), new Material($materials[array_rand($materials)])),
-    new Boots(new Color('red'), new Material($materials[array_rand($materials)]))
-);
-
-echo $greenMarket->getHat()->getDescription();
-echo '<hr/>';
-
-echo $greenMarket->getJacket()->getDescription();
-echo '<hr/>';
-
-echo $greenMarket->getBoots()->getDescription();
-echo '<hr/>';
-
-echo $redMarket->getJacket()->getDescription();
-echo '<hr/>';
-
-echo $redMarket->getBoots()->getDescription();
+$hat_1 = $market->getHat();
+$hat_2 = $market->getHat();
+echo 'First ' . $hat_1->getDescription() . '<hr/>';
+echo 'Second ' . $hat_2->getDescription() . '<hr/>';
+echo 'Changing color on hat_1 ... <hr/>';
+$hat_1->setColor(new Color('GreyLight'));
+echo 'First ' . $hat_1->getDescription() . '<hr/>';
+echo 'Second ' . $hat_2->getDescription() . '<hr/>';
